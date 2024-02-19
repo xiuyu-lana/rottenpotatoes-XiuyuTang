@@ -1,3 +1,68 @@
+<style>
+    .sort-asc {
+        background-color: #c1e1c1;
+    }
+
+    .sort-desc {
+        background-color: #f7cac9;
+    }
+
+    .non-sort {
+        display: none;
+    }
+
+    #moviesTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    #moviesTable th, #moviesTable td {
+        text-align: left;
+        padding: 8px;
+    }
+
+    #moviesTable thead {
+        background-color: #f2f2f2;
+        color: #333;
+    }
+
+    #moviesTable tbody tr:nth-child(odd) {
+        background-color: #f9f9f9;
+    }
+
+    #moviesTable tbody tr:hover {
+        background-color: #ddd;
+    }
+
+    #moviesTable tfoot {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+
+    th span {
+        cursor: pointer;
+    }
+
+    .new-movie-link {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 10px 0;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.2s;
+    }
+
+    .new-movie-link:hover, .new-movie-link:focus {
+        background-color: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+
+</style>
+
 <p style="color: green"><%= notice %></p>
 
 <h1>Movies</h1>
@@ -6,19 +71,19 @@
   <table id="moviesTable">
     <thead>
     <tr>
-      <th onclick="sortTable(0)">Title</th>
-      <th onclick="sortTable(1)">Rating</th>
-      <th onclick="sortTable(2)">Release Date</th>
+      <th onclick="sortTable(0)">Title <span></span></th>
+      <th onclick="sortTable(1)">Rating <span></span></th>
+      <th onclick="sortTable(2)">Release Date <span></span></th>
     </tr>
     </thead>
     <tbody>
-      <% @movies.each do |movie| %>
-        <tr>
-          <td><%= movie.title %></td>
-          <td><%= movie.rating %></td>
-          <td><%= movie.release_date %></td>
-        </tr>
-      <% end %>
+    <% @movies.each do |movie| %>
+      <tr>
+        <td><%= movie.title %> <span><%= link_to "[show]", movie_path(movie) %></span></td>
+        <td><%= movie.rating %></td>
+        <td><%= movie.release_date %></td>
+      </tr>
+    <% end %>
     </tbody>
     <tfoot>
     <tr>
@@ -29,29 +94,42 @@
   </table>
 </div>
 
-<%= link_to "New movie", new_movie_path %>
+<%= link_to "New movie", new_movie_path, class: "new-movie-link" %>
 
 <script>
     //adapted from an example on w3schools.com
-    function sortTable(n) {
+    function sortTable(n, reload_dir="asc", reload=false) {
         var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
         table = document.getElementById("moviesTable");
         switching = true;
-        //Set the sorting direction to ascending:
         dir = "asc";
-        /*Make a loop that will continue until
-        no switching has been done:*/
+        if (reload){
+            dir=reload_dir;
+        }
+        // Remove existing classes
+        var th = table.getElementsByTagName("TH");
+        for (i = 0; i < th.length; i++) {
+            th[i].classList.remove("sort-asc", "sort-desc");
+            th[i].querySelector("span").innerHTML = "";
+            // Remove rows' color
+            for (let j = 0; j < table.rows.length; j++) {
+                let x = table.rows[j].getElementsByTagName("TD")[i];
+                if (x) {
+                    // console.log(x);
+                    x.classList.remove("sort-asc", "sort-desc");
+                }
+            }
+        }
+
         while (switching) {
             //start by saying: no switching is done:
             switching = false;
             rows = table.rows;
             /*Loop through all table rows (except the
-            first, which contains table headers):*/
+            first, which contains table headers and footer):*/
             for (i = 1; i < (rows.length - 2); i++) {
                 //start by saying there should be no switching:
                 shouldSwitch = false;
-                /*Get the two elements you want to compare,
-                one from current row and one from the next:*/
                 x = rows[i].getElementsByTagName("TD")[n];
                 y = rows[i + 1].getElementsByTagName("TD")[n];
                 /*check if the two rows should switch place,
@@ -59,7 +137,7 @@
                 if (dir == "asc") {
                     if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
                         //if so, mark as a switch and break the loop:
-                        shouldSwitch= true;
+                        shouldSwitch = true;
                         break;
                     }
                 } else if (dir == "desc") {
@@ -76,15 +154,59 @@
                 rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
                 switching = true;
                 //Each time a switch is done, increase this count by 1:
-                switchcount ++;
+                switchcount++;
             } else {
                 /*If no switching has been done AND the direction is "asc",
                 set the direction to "desc" and run the while loop again.*/
-                if (switchcount == 0 && dir == "asc") {
+                if (switchcount == 0 && dir == "asc" && reload==false) {
                     dir = "desc";
                     switching = true;
                 }
             }
         }
+
+        // Add class to the clicked header based on current direction
+        if (dir == "asc") {
+            th[n].classList.add("sort-asc");
+            th[n].querySelector("span").innerHTML = "&#x25b4;"
+        } else {
+            th[n].classList.add("sort-desc");
+            th[n].querySelector("span").innerHTML = "&#x25be;"
+        }
+        for (let j = 0; j < table.rows.length - 1; j++) {
+            let x = table.rows[j].getElementsByTagName("TD")[n];
+            if (x) {
+                // console.log(x);
+                x.classList.add("sort-" + dir);
+            }
+        }
+        save(n, dir);
     }
+
+    function save(col, dir) {
+        localStorage.setItem("col", col);
+        localStorage.setItem("dir", dir);
+    }
+    function load(){
+        const col = localStorage.getItem("col");
+        const dir=localStorage.getItem("dir");
+        if (col !==null && dir!==null){
+            sortTable(col,dir,true);
+        }
+    }
+    // window.addEventListener('load', function(event) { });
+    if (document.readyState !== 'loading') {
+        load();
+    }else{
+        document.addEventListener('DOMContentLoaded', function (){
+            console.log("content load");
+            load();
+        });
+    }
+
+    // document.addEventListener('pageshow', function (){
+    //     console.log("pageshow");
+    //     load();
+    // });
+    // window.addEventListener('unload', function(event) { });
 </script>

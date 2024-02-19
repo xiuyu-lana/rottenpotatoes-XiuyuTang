@@ -1,10 +1,39 @@
-<p style="color: green"><%= notice %></p>
+<style>
+    .card {
+        width: 60%;
+        background-color: #ffffff;
+        border: 1px solid #dddddd;
+        border-radius: 0.25rem;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    .link {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 10px 0;
+        background-color: #007bff; /* Bootstrap primary color */
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.2s;
+    }
 
-<%= render @movie %>
+    .link:hover, .link:focus {
+        background-color: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+<div class="card">
+  <p style="color: green"><%= notice %></p>
+
+  <%= render @movie%>
+</div>
+
 
 <div>
-  <%= link_to "Edit this movie", edit_movie_path(@movie) %> |
-  <%= link_to "Back to movies", movies_path %>
+  <%= link_to "Edit this movie", edit_movie_path(@movie), class: "link" %> |
+  <%= link_to "Back to movies", movies_path, class:"link" %>
 
-  <%= button_to "Destroy this movie", @movie, method: :delete %>
+  <%= button_to "Destroy this movie", @movie, method: :delete, class:"link" %>
 </div>
